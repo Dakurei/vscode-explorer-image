@@ -140,8 +140,9 @@ class ImageViewProvider implements vscode.WebviewViewProvider, vscode.Disposable
       if (generation === this.generation && !this.disposed && view.visible) {
         this.request = undefined;
         const configured = config.get<number>('refreshInterval', 60);
-        const seconds = Number.isFinite(configured)
-          ? Math.max(0, Math.min(86400, Math.floor(configured))) : 60;
+        const seconds = config.get<boolean>('autoRefresh', true)
+          ? (Number.isFinite(configured) ? Math.max(0, Math.min(86400, Math.floor(configured))) : 60)
+          : 0;
         this.post({ type: 'schedule', nextRefreshAt: seconds > 0 ? Date.now() + seconds * 1000 : null });
         if (seconds > 0) {
           this.timer = setTimeout(() => void this.refresh(), seconds * 1000);

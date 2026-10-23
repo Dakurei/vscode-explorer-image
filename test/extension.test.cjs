@@ -93,6 +93,29 @@ test('zero interval keeps manual refresh and disables the timer', async () => {
   state.provider.dispose();
 });
 
+test('unchecking automatic refresh cancels the timer, preserves the interval and allows manual refresh', async () => {
+  const state = setup();
+  state.values.refreshInterval = 120;
+  await state.provider.refresh();
+  assert.equal([...state.timers.values()][0].delay, 120_000);
+
+  state.values.autoRefresh = false;
+  state.callbacks.configuration({ affectsConfiguration: () => true });
+  await new Promise(setImmediate);
+  assert.equal(state.timers.size, 0);
+  assert.equal(state.messages.at(-1).nextRefreshAt, null);
+  await state.commands.get('explorerImage.refresh')();
+  assert.equal(state.requests.length, 3);
+  assert.equal(state.timers.size, 0);
+  assert.equal(state.values.refreshInterval, 120);
+
+  state.values.autoRefresh = true;
+  state.callbacks.configuration({ affectsConfiguration: () => true });
+  await new Promise(setImmediate);
+  assert.equal([...state.timers.values()][0].delay, 120_000);
+  state.provider.dispose();
+});
+
 test('hiding the view aborts the request and prevents late images and timers', async () => {
   let finish;
   const state = setup(() => new Promise(resolve => { finish = resolve; }));

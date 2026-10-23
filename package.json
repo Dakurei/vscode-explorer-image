@@ -99,13 +99,19 @@
           "ignoreSync": true,
           "markdownDescription": "Mot de passe HTTP Basic facultatif, stocké **en clair** dans les réglages utilisateur. Préférez la commande **Image : Enregistrer le mot de passe HTTP Basic** pour utiliser le coffre sécurisé. Le mot de passe du coffre est prioritaire."
         },
+        "explorerImage.autoRefresh": {
+          "type": "boolean",
+          "default": true,
+          "order": 4,
+          "description": "Activer le rafraîchissement automatique de l’image. Décochez pour conserver uniquement le chargement initial et le rafraîchissement manuel."
+        },
         "explorerImage.refreshInterval": {
           "type": "integer",
           "default": 60,
           "minimum": 0,
           "maximum": 86400,
-          "order": 4,
-          "description": "Secondes entre deux chargements (60 par défaut). 0 désactive le rafraîchissement automatique."
+          "order": 5,
+          "description": "Secondes entre deux chargements lorsque le rafraîchissement automatique est activé (60 par défaut). 0 le désactive également, pour préserver les anciens réglages."
         }
       }
     }

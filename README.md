@@ -91,6 +91,7 @@ Exemple dans les paramètres utilisateur JSON :
 {
   "explorerImage.url": "https://example.com/status.png",
   "explorerImage.username": "",
+  "explorerImage.autoRefresh": true,
   "explorerImage.refreshInterval": 60
 }
 ```
@@ -100,9 +101,10 @@ Exemple dans les paramètres utilisateur JSON :
 | `explorerImage.url` | `""` | URL HTTP(S) de l’image. Vide : aucun chargement. |
 | `explorerImage.username` | `""` | Identifiant HTTP Basic facultatif. |
 | `explorerImage.password` | `""` | Mot de passe HTTP Basic facultatif, en clair dans les paramètres utilisateur locaux. |
+| `explorerImage.autoRefresh` | `true` | Case à cocher pour activer ou désactiver le rafraîchissement automatique, sans modifier le délai. |
 | `explorerImage.refreshInterval` | `60` | Délai en secondes après la fin du chargement, entre 0 et 86400. `0` désactive le rafraîchissement automatique. |
 
-Les modifications s’appliquent immédiatement. L’icône **Rafraîchir** dans la barre de titre permet de recharger à tout moment. Vous pouvez redimensionner la section en déplaçant sa séparation dans l’Explorateur. Si elle est masquée, utilisez **Affichage → Ouvrir la vue… → Image**.
+Les modifications s’appliquent immédiatement. Décochez **Auto Refresh** dans les réglages pour désactiver le rafraîchissement automatique : l’image se charge toujours à l’ouverture du panneau, et le délai configuré reste conservé. L’icône **Rafraîchir** dans la barre de titre permet de recharger à tout moment. Vous pouvez redimensionner la section en déplaçant sa séparation dans l’Explorateur. Si elle est masquée, utilisez **Affichage → Ouvrir la vue… → Image**.
 
 ### Authentification HTTP Basic
 
