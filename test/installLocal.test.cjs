@@ -47,10 +47,24 @@ test('reinstall replaces the whole payload in the same folder when the version c
   await fs.writeFile(path.join(project, 'package.json'), JSON.stringify(manifest));
   await fs.writeFile(path.join(project, 'out', 'extension.js'), 'exports.activate = () => "updated";');
   const installed = await installLocal(project, extensions);
-  assert.equal(installed.target, target);
+  assert.equal(installed.target, await fs.realpath(target));
   assert.equal(installed.version, '0.2.0');
   assert.match(await fs.readFile(path.join(target, 'out', 'extension.js'), 'utf8'), /updated/);
   assert.deepEqual(await fs.readdir(path.join(target, 'out')), ['extension.js']);
+  assert.deepEqual(await fs.readdir(extensions), [id]);
+});
+
+test('reinstall through a directory alias updates the same canonical destination', async t => {
+  const { root, project, extensions, target } = await fixture(t);
+  await fs.mkdir(extensions);
+  const alias = path.join(root, 'extensions-alias');
+  await fs.symlink(extensions, alias, 'junction');
+  await installLocal(project, extensions);
+  await fs.writeFile(path.join(project, 'out', 'extension.js'), 'exports.activate = () => "updated through alias";');
+  const installed = await installLocal(project, alias);
+  assert.equal(installed.target, await fs.realpath(path.join(alias, id)));
+  assert.equal(installed.target, await fs.realpath(target));
+  assert.match(await fs.readFile(path.join(target, 'out', 'extension.js'), 'utf8'), /updated through alias/);
   assert.deepEqual(await fs.readdir(extensions), [id]);
 });
 
