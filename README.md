@@ -1,7 +1,7 @@
 <h1 align="center">VS Code Explorer Image</h1>
 
 <p align="center">
-  Une image distante dans votre Explorateur VS Code, toujours à jour.
+  Une image distante ou un flux MJPEG dans votre Explorateur VS Code.
 </p>
 
 <p align="center">
@@ -20,7 +20,7 @@
 
 ---
 
-Ajoutez une section **Image** à l’Explorateur de VS Code pour garder un visuel distant sous les yeux : webcam, graphique, état d’un service ou toute autre image accessible par URL. Le rafraîchissement est automatique et configurable.
+Ajoutez une section **Image** à l’Explorateur de VS Code pour garder un visuel distant sous les yeux : webcam, graphique, état d’un service ou toute autre image accessible par URL. Le rafraîchissement est automatique et configurable. Les flux MJPEG sont lus en continu.
 
 L’image remplit toute la surface du panneau, sans marges, textes ni boutons superposés. Le rafraîchissement manuel et les réglages sont accessibles dans la barre de titre.
 
@@ -98,13 +98,31 @@ Exemple dans les paramètres utilisateur JSON :
 
 | Réglage | Valeur par défaut | Fonction |
 | --- | --- | --- |
-| `explorerImage.url` | `""` | URL HTTP(S) de l’image. Vide : aucun chargement. |
+| `explorerImage.url` | `""` | URL HTTP(S) d’une image ou d’un flux MJPEG. Vide : aucun chargement. |
 | `explorerImage.username` | `""` | Identifiant HTTP Basic facultatif. |
 | `explorerImage.password` | `""` | Mot de passe HTTP Basic facultatif, en clair dans les paramètres utilisateur locaux. |
-| `explorerImage.autoRefresh` | `true` | Case à cocher pour activer ou désactiver le rafraîchissement automatique, sans modifier le délai. |
-| `explorerImage.refreshInterval` | `60` | Délai en secondes après la fin du chargement, entre 0 et 86400. `0` désactive le rafraîchissement automatique. |
+| `explorerImage.autoRefresh` | `true` | Case à cocher pour activer ou désactiver le rafraîchissement des images fixes et la reconnexion des flux interrompus, sans modifier le délai. |
+| `explorerImage.refreshInterval` | `60` | Délai en secondes après la fin du chargement ou avant une reconnexion, entre 0 et 86400. `0` désactive les tentatives automatiques. |
 
 Les modifications s’appliquent immédiatement. Décochez **Auto Refresh** dans les réglages pour désactiver le rafraîchissement automatique : l’image se charge toujours à l’ouverture du panneau, et le délai configuré reste conservé. L’icône **Rafraîchir** dans la barre de titre permet de recharger à tout moment. Vous pouvez redimensionner la section en déplaçant sa séparation dans l’Explorateur. Si elle est masquée, utilisez **Affichage → Ouvrir la vue… → Image**.
+
+### Flux MJPEG (`.mjpg`, `.mjpeg`)
+
+Renseignez directement l’URL du flux dans `explorerImage.url`, par exemple :
+
+```json
+{
+  "explorerImage.url": "http://192.168.1.10:8080/video.mjpg",
+  "explorerImage.autoRefresh": true,
+  "explorerImage.refreshInterval": 5
+}
+```
+
+La détection repose sur le `Content-Type: multipart/x-mixed-replace` de la réponse HTTP, avec son paramètre `boundary` : l’extension du chemin n’a pas d’importance. Chaque partie doit contenir une image JPEG ; les parties avec ou sans `Content-Length` sont acceptées. Le format suit les [règles MIME multipart](https://www.rfc-editor.org/rfc/rfc2046.html#section-5.1.1).
+
+La connexion reste ouverte pendant la lecture ; le délai de rafraîchissement ne redémarre pas un flux actif. Si le flux s’arrête ou ne fournit aucune image complète pendant 15 secondes, la dernière image reste affichée et une reconnexion est tentée après le délai configuré. Décochez **Auto Refresh** pour réserver la reconnexion au bouton **Rafraîchir** : cela ne met pas en pause un flux actif. Masquer le panneau ferme la connexion ; le rouvrir lance une nouvelle lecture.
+
+L’authentification HTTP Basic fonctionne aussi pour les flux. Si l’affichage prend du retard, seules l’image en cours de décodage et la dernière image en attente sont conservées pour éviter une accumulation. Les flux vidéo RTSP, HLS ou MP4 ne sont pas pris en charge.
 
 ### Authentification HTTP Basic
 
@@ -120,10 +138,10 @@ Vous pouvez aussi utiliser directement `explorerImage.password` dans les paramè
 ## Comportement
 
 - Le téléchargement s’exécute dans l’extension, sans dépendre des autorisations CORS du serveur.
-- Formats acceptés : PNG, JPEG, GIF, WebP, SVG, AVIF, BMP et ICO, avec un en-tête `Content-Type` correspondant. Le serveur doit renvoyer l’image directement, pas une page HTML.
+- Formats acceptés : PNG, JPEG, GIF, WebP, SVG, AVIF, BMP et ICO, avec un en-tête `Content-Type` correspondant, ainsi que les flux MJPEG `multipart/x-mixed-replace`. Le serveur doit renvoyer l’image ou le flux directement, pas une page HTML.
 - L’image garde ses proportions et remplit le cadre bord à bord. Elle est centrée et recadrée si ses proportions diffèrent de celles du panneau. Les GIF animés restent animés.
 - Les requêtes demandent de ne pas utiliser le cache ; l’URL et ses paramètres sont conservés, notamment pour les URL signées.
-- Le chargement est limité à 15 secondes et 10 Mo. Sans image, les erreurs s’affichent dans le cadre. Si une image est déjà affichée, elle reste visible sans superposition et l’erreur est disponible au survol. Le prochain rafraîchissement est maintenu.
+- Une image fixe est limitée à 15 secondes de chargement et 10 Mo. Pour MJPEG, ces limites s’appliquent au délai entre deux images complètes et à la taille de chaque image, sans limite de durée totale du flux. Sans image, les erreurs s’affichent dans le cadre. Si une image est déjà affichée, elle reste visible sans superposition et l’erreur est disponible au survol. Les tentatives automatiques restent actives si la case correspondante est cochée et le délai supérieur à zéro.
 - Le rafraîchissement et les requêtes en cours s’arrêtent quand la vue est masquée. Une nouvelle requête démarre à sa réouverture.
 - Jusqu’à cinq redirections sont suivies. Les identifiants sont retirés lorsque l’origine change, et une redirection HTTPS vers HTTP est refusée.
 - L’extension nécessite un espace de travail approuvé. Elle cible VS Code Desktop (y compris un hôte d’extension distant), pas vscode.dev. Le serveur doit être joignable depuis l’hôte de l’extension.
@@ -138,7 +156,7 @@ npm test
 
 Ouvrez **ce dossier** dans VS Code, puis appuyez sur `F5`. Une fenêtre **Extension Development Host** s’ouvre avec la section **Image** dans l’Explorateur.
 
-Les tests utilisent des serveurs HTTP locaux pour vérifier les téléchargements, l’authentification, les redirections, les réponses invalides, les limites de taille, le délai et l’annulation. L’installation locale est testée dans des dossiers temporaires, y compris les réinstallations, les conflits et la conservation de la version précédente en cas de préparation incomplète. `npm run watch` permet de recompiler pendant le développement.
+Les tests utilisent des serveurs HTTP locaux pour vérifier les téléchargements, l’authentification, les redirections, les réponses invalides, les limites de taille, le délai et l’annulation. Ils couvrent aussi les flux MJPEG fragmentés, la lecture continue, les coupures et les reconnexions, ainsi que la gestion des images en attente dans la webview. L’installation locale est testée dans des dossiers temporaires, y compris les réinstallations, les conflits et la conservation de la version précédente en cas de préparation incomplète. `npm run watch` permet de recompiler pendant le développement.
 
 L’extension n’a aucune dépendance d’exécution. Les dépendances de développement se limitent à TypeScript et aux types de Node.js et de VS Code.
 

@@ -188,3 +188,68 @@ test('a newer refresh cancels the previous download and ignores its result', asy
   assert.equal(state.timers.size, 1);
   state.provider.dispose();
 });
+
+test('a live stream keeps its connection, drops waiting frames and stops delivery when hidden', async () => {
+  const state = setup(options => new Promise((_resolve, reject) => {
+    options.signal.addEventListener('abort', () => reject(new Error('cancelled')), { once: true });
+  }));
+  const pending = state.provider.refresh();
+  await new Promise(setImmediate);
+  const images = () => state.messages.filter(message => message.type === 'image');
+  const { onFrame, signal } = state.requests[0];
+  onFrame('first');
+  const first = images()[0];
+  onFrame('second');
+  onFrame('latest');
+  assert.equal(images().length, 1, 'only one frame may be decoding in the webview');
+  assert.equal(state.timers.size, 0, 'a live stream must not be restarted by the refresh timer');
+
+  state.callbacks.message({ type: 'frameDisplayed', frameId: first.frameId });
+  assert.deepEqual(images().map(message => message.image), ['first', 'latest']);
+  onFrame('waiting');
+  state.callbacks.message({ type: 'frameDisplayed', frameId: first.frameId });
+  assert.equal(images().length, 2, 'an old acknowledgement must not release another frame');
+
+  state.view.visible = false;
+  state.callbacks.visibility();
+  await pending;
+  assert.equal(signal.aborted, true);
+  onFrame('too late');
+  state.callbacks.message({ type: 'frameDisplayed', frameId: images()[1].frameId });
+  assert.equal(images().length, 2);
+  assert.equal(state.timers.size, 0);
+
+  state.view.visible = true;
+  const reopened = state.provider.refresh();
+  await new Promise(setImmediate);
+  state.requests[1].onFrame('reopened');
+  assert.equal(images().at(-1).image, 'reopened');
+  state.provider.dispose();
+  await reopened;
+});
+
+for (const [autoRefresh, refreshInterval, retry] of [[true, 5, true], [false, 5, false], [true, 0, false]]) {
+  test(`stream disconnection respects autoRefresh=${autoRefresh}, interval=${refreshInterval} and allows manual reconnect`, async () => {
+    const state = setup(async options => {
+      options.onFrame('last JPEG');
+      throw new Error('Le flux MJPEG est interrompu.');
+    });
+    state.values.autoRefresh = autoRefresh;
+    state.values.refreshInterval = refreshInterval;
+    await state.provider.refresh();
+    assert.equal(state.messages.find(message => message.type === 'image').image, 'last JPEG');
+    assert.equal(state.messages.find(message => message.type === 'error').message, 'Le flux MJPEG est interrompu.');
+    assert.equal(state.timers.size, retry ? 1 : 0);
+    if (retry) {
+      const timer = [...state.timers.values()][0];
+      assert.equal(timer.delay, 5_000);
+      timer.callback();
+      await new Promise(setImmediate);
+      assert.equal(state.requests.length, 2);
+    }
+    const count = state.requests.length;
+    await state.commands.get('explorerImage.refresh')();
+    assert.equal(state.requests.length, count + 1);
+    state.provider.dispose();
+  });
+}

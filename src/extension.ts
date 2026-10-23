@@ -63,6 +63,9 @@ class ImageViewProvider implements vscode.WebviewViewProvider, vscode.Disposable
   private request?: AbortController;
   private viewSubscriptions: vscode.Disposable[] = [];
   private generation = 0;
+  private nextFrameId = 0;
+  private frameInFlight?: number;
+  private pendingFrame?: string;
   private disposed = false;
 
   constructor(private readonly context: vscode.ExtensionContext) {}
@@ -82,6 +85,11 @@ class ImageViewProvider implements vscode.WebviewViewProvider, vscode.Disposable
           void this.refresh();
         } else if (message?.type === 'settings') {
           void vscode.commands.executeCommand('explorerImage.openSettings');
+        } else if (message?.type === 'frameDisplayed' && message.frameId === this.frameInFlight) {
+          this.frameInFlight = undefined;
+          if (this.pendingFrame) {
+            this.queueFrame(this.pendingFrame);
+          }
         }
       }),
       view.onDidChangeVisibility(() => {
@@ -125,6 +133,11 @@ class ImageViewProvider implements vscode.WebviewViewProvider, vscode.Disposable
         url, username,
         password: storedPassword ?? config.get<string>('password', ''),
         signal: controller.signal,
+        onFrame: image => {
+          if (generation === this.generation) {
+            this.queueFrame(image);
+          }
+        },
       });
       if (generation === this.generation) {
         this.post({ type: 'image', image, updatedAt: Date.now() });
@@ -157,12 +170,25 @@ class ImageViewProvider implements vscode.WebviewViewProvider, vscode.Disposable
     }
   }
 
+  private queueFrame(image: string): void {
+    // Keep one frame being decoded and only the latest waiting frame.
+    if (this.frameInFlight !== undefined) {
+      this.pendingFrame = image;
+      return;
+    }
+    this.pendingFrame = undefined;
+    this.frameInFlight = ++this.nextFrameId;
+    this.post({ type: 'image', image, frameId: this.frameInFlight, updatedAt: Date.now() });
+  }
+
   private stop(): void {
     this.generation++;
     clearTimeout(this.timer);
     this.timer = undefined;
     this.request?.abort();
     this.request = undefined;
+    this.frameInFlight = undefined;
+    this.pendingFrame = undefined;
   }
 
   dispose(): void {

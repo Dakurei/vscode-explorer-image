@@ -1,3 +1,5 @@
+import { readMjpeg } from './mjpeg';
+
 const supportedTypes = new Set([
   'image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/svg+xml',
   'image/avif', 'image/bmp', 'image/x-icon', 'image/vnd.microsoft.icon',
@@ -10,6 +12,8 @@ export interface ImageRequest {
   signal?: AbortSignal;
   timeoutMs?: number;
   maxBytes?: number;
+  /** If provided, MJPEG frames are delivered until the stream ends or is aborted. */
+  onFrame?: (image: string) => void;
 }
 
 export function parseImageUrl(value: string): URL {
@@ -38,14 +42,20 @@ export async function fetchImage(options: ImageRequest): Promise<string> {
   let authorization = username || password
     ? `Basic ${Buffer.from(`${username}:${password}`, 'utf8').toString('base64')}`
     : undefined;
-  const timeout = AbortSignal.timeout(options.timeoutMs ?? 15_000);
-  const signal = options.signal ? AbortSignal.any([timeout, options.signal]) : timeout;
+  const timeout = new AbortController();
+  const signal = options.signal ? AbortSignal.any([timeout.signal, options.signal]) : timeout.signal;
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const resetTimeout = (): void => {
+    clearTimeout(timer);
+    timer = setTimeout(() => timeout.abort(), options.timeoutMs ?? 15_000);
+  };
+  resetTimeout();
   const maxBytes = options.maxBytes ?? 10 * 1024 * 1024;
 
   try {
     for (let redirects = 0; redirects <= 5; redirects++) {
       const headers: Record<string, string> = {
-        Accept: 'image/*',
+        Accept: 'image/*, multipart/x-mixed-replace',
         'Cache-Control': 'no-cache, no-store',
         Pragma: 'no-cache',
       };
@@ -82,10 +92,26 @@ export async function fetchImage(options: ImageRequest): Promise<string> {
           ? ' Vérifiez les identifiants HTTP Basic.' : '';
         throw new Error(`Le serveur a répondu HTTP ${response.status}.${hint}`);
       }
-      const type = response.headers.get('content-type')?.split(';')[0].trim().toLowerCase();
+      const contentType = response.headers.get('content-type') ?? '';
+      const type = contentType.split(';')[0].trim().toLowerCase();
+      if (type === 'multipart/x-mixed-replace') {
+        if (!response.body) {
+          throw new Error('Le serveur a renvoyé un flux MJPEG vide.');
+        }
+        for await (const frame of readMjpeg(response.body, contentType, maxBytes)) {
+          signal.throwIfAborted();
+          resetTimeout();
+          const image = `data:image/jpeg;base64,${frame.toString('base64')}`;
+          if (!options.onFrame) {
+            return image;
+          }
+          options.onFrame(image);
+        }
+        throw new Error('Le flux MJPEG est terminé.');
+      }
       if (!type || !supportedTypes.has(type)) {
         await response.body?.cancel();
-        throw new Error('Le serveur doit renvoyer une image avec un Content-Type image/* pris en charge.');
+        throw new Error('Le serveur doit renvoyer une image avec un Content-Type image/* pris en charge ou un flux MJPEG multipart/x-mixed-replace.');
       }
       if (Number(response.headers.get('content-length')) > maxBytes) {
         await response.body?.cancel();
@@ -123,7 +149,7 @@ export async function fetchImage(options: ImageRequest): Promise<string> {
     if (options.signal?.aborted) {
       throw new Error('Chargement annulé.');
     }
-    if (timeout.aborted) {
+    if (timeout.signal.aborted) {
       throw new Error('Le serveur ne répond pas dans le délai imparti (15 secondes par défaut).');
     }
     // Fetch errors may include URLs, query tokens or low-level credentials.
@@ -131,5 +157,8 @@ export async function fetchImage(options: ImageRequest): Promise<string> {
       throw new Error('Connexion impossible. Vérifiez l’URL, le réseau et le certificat HTTPS.');
     }
     throw error;
+  } finally {
+    clearTimeout(timer);
+    timeout.abort();
   }
 }

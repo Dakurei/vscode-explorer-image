@@ -1,7 +1,7 @@
 {
   "name": "explorer-image",
   "displayName": "VS Code Explorer Image",
-  "description": "Affiche une image distante dans l’Explorateur de VS Code, avec rafraîchissement automatique.",
+  "description": "Affiche une image distante ou un flux MJPEG dans l’Explorateur de VS Code, avec rafraîchissement automatique configurable.",
   "version": "0.1.1",
   "publisher": "local-tools",
   "license": "MIT",
@@ -83,7 +83,7 @@
           "type": "string",
           "default": "",
           "order": 1,
-          "description": "URL HTTP ou HTTPS de l’image. Une URL vide désactive le chargement."
+          "description": "URL HTTP ou HTTPS d’une image ou d’un flux MJPEG (multipart/x-mixed-replace). Une URL vide désactive le chargement."
         },
         "explorerImage.username": {
           "type": "string",
@@ -103,7 +103,7 @@
           "type": "boolean",
           "default": true,
           "order": 4,
-          "description": "Activer le rafraîchissement automatique de l’image. Décochez pour conserver uniquement le chargement initial et le rafraîchissement manuel."
+          "description": "Activer le rafraîchissement automatique des images fixes et la reconnexion des flux MJPEG interrompus. Un flux actif reste en lecture même si cette case est décochée."
         },
         "explorerImage.refreshInterval": {
           "type": "integer",
@@ -111,7 +111,7 @@
           "minimum": 0,
           "maximum": 86400,
           "order": 5,
-          "description": "Secondes entre deux chargements lorsque le rafraîchissement automatique est activé (60 par défaut). 0 le désactive également, pour préserver les anciens réglages."
+          "description": "Secondes entre deux chargements d’image ou avant la reconnexion d’un flux MJPEG interrompu, lorsque le rafraîchissement automatique est activé (60 par défaut). 0 le désactive également, pour préserver les anciens réglages."
         }
       }
     }
