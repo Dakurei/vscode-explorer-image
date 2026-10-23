@@ -59,13 +59,17 @@ test('reinstall through a directory alias updates the same canonical destination
   await fs.mkdir(extensions);
   const alias = path.join(root, 'extensions-alias');
   await fs.symlink(extensions, alias, 'junction');
+  await fs.writeFile(path.join(extensions, 'extensions.json'), '[]');
   await installLocal(project, extensions);
   await fs.writeFile(path.join(project, 'out', 'extension.js'), 'exports.activate = () => "updated through alias";');
   const installed = await installLocal(project, alias);
   assert.equal(installed.target, await fs.realpath(path.join(alias, id)));
   assert.equal(installed.target, await fs.realpath(target));
   assert.match(await fs.readFile(path.join(target, 'out', 'extension.js'), 'utf8'), /updated through alias/);
-  assert.deepEqual(await fs.readdir(extensions), [id]);
+  const [registration] = JSON.parse(await fs.readFile(path.join(extensions, 'extensions.json'), 'utf8'));
+  const uriPath = require('node:url').fileURLToPath(new URL(`file://${registration.location.path}`));
+  assert.equal(uriPath, await fs.realpath(target));
+  assert.deepEqual((await fs.readdir(extensions)).sort(), ['extensions.json', id]);
 });
 
 test('a missing compiled entry leaves the previous installation intact and cleans staging', async t => {
@@ -116,7 +120,7 @@ test('repairs an unregistered copy marked for removal and preserves other extens
   assert.equal(registration.location.scheme, 'file');
   // URI paths use forward slashes and a leading slash before a Windows drive.
   const uriPath = require('node:url').fileURLToPath(new URL(`file://${registration.location.path}`));
-  assert.equal(uriPath, target);
+  assert.equal(uriPath, await fs.realpath(target));
   assert.deepEqual(JSON.parse(await fs.readFile(obsoleteFile, 'utf8')), {
     [`${id}-0.1.0`]: true, 'other.extension-0.9.0': true,
   });
@@ -179,9 +183,10 @@ test('a failed metadata update restores the previous files, registry and removal
   const obsolete = JSON.stringify({ [`${id}-${manifest.version}`]: true });
   await fs.writeFile(profileFile, profile);
   await fs.writeFile(obsoleteFile, obsolete);
+  const canonicalObsoleteFile = await fs.realpath(obsoleteFile);
   const rename = fs.rename;
   t.mock.method(fs, 'rename', async (from, to) => {
-    if (to === obsoleteFile) throw Object.assign(new Error('simulated write failure'), { code: 'EACCES' });
+    if (to === canonicalObsoleteFile) throw Object.assign(new Error('simulated write failure'), { code: 'EACCES' });
     return rename(from, to);
   });
   await assert.rejects(installLocal(project, extensions), { code: 'EACCES' });
