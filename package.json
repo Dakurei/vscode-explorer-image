@@ -116,13 +116,11 @@
     "test": "npm run compile && node --test",
     "install:local": "npm run compile && node scripts/install-local.cjs",
     "update:local": "git pull --ff-only && npm ci && npm run install:local --",
-    "vscode:prepublish": "npm run compile",
-    "package": "vsce package --no-dependencies --allow-missing-repository"
+    "vscode:prepublish": "npm run compile"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
     "@types/vscode": "~1.96.0",
-    "@vscode/vsce": "^3.0.0",
     "typescript": "^5.7.0"
   }
 }

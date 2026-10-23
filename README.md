@@ -138,6 +138,6 @@ Ouvrez **ce dossier** dans VS Code, puis appuyez sur `F5`. Une fenêtre **Extens
 
 Les tests utilisent des serveurs HTTP locaux pour vérifier les téléchargements, l’authentification, les redirections, les réponses invalides, les limites de taille, le délai et l’annulation. L’installation locale est testée dans des dossiers temporaires, y compris les réinstallations, les conflits et la conservation de la version précédente en cas de préparation incomplète. `npm run watch` permet de recompiler pendant le développement.
 
-Pour distribuer ponctuellement une archive, `npm run package` reste disponible. Le VSIX généré est ignoré par Git et n’intervient pas dans le parcours d’installation depuis les sources.
+L’extension n’a aucune dépendance d’exécution. Les dépendances de développement se limitent à TypeScript et aux types de Node.js et de VS Code.
 
-Documentation officielle : [vues dans l’Explorateur](https://code.visualstudio.com/api/references/contribution-points#contributes.views), [webviews](https://code.visualstudio.com/api/extension-guides/webview) et [création de VSIX](https://code.visualstudio.com/api/working-with-extensions/publishing-extension).
+Documentation officielle : [vues dans l’Explorateur](https://code.visualstudio.com/api/references/contribution-points#contributes.views) et [webviews](https://code.visualstudio.com/api/extension-guides/webview).
