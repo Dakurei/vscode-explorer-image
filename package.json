@@ -2,7 +2,7 @@
   "name": "explorer-image",
   "displayName": "VS Code Explorer Image",
   "description": "Affiche une image distante ou un flux MJPEG dans l’Explorateur de VS Code, avec rafraîchissement automatique configurable.",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "publisher": "local-tools",
   "license": "MIT",
   "engines": {

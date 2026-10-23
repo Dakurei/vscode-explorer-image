@@ -93,6 +93,104 @@ test('an active VSIX installation must be uninstalled; obsolete versions can coe
   assert.equal((await fs.stat(old)).isDirectory(), true);
 });
 
+test('repairs an unregistered copy marked for removal and preserves other extensions and obsolete versions', async t => {
+  const { project, extensions, target, manifest } = await fixture(t);
+  await installLocal(project, extensions);
+  const profileFile = path.join(extensions, 'extensions.json');
+  const obsoleteFile = path.join(extensions, '.obsolete');
+  const other = {
+    identifier: { id: 'other.extension', uuid: 'other-uuid' }, version: '1.0.0',
+    location: { $mid: 1, scheme: 'file', path: '/other/extension' },
+    relativeLocation: 'other.extension-1.0.0', metadata: { pinned: true, source: 'gallery' },
+  };
+  await fs.writeFile(profileFile, JSON.stringify([other]));
+  await fs.writeFile(obsoleteFile, JSON.stringify({
+    [`${id}-${manifest.version}`]: true, [`${id}-0.1.0`]: true, 'other.extension-0.9.0': true,
+  }));
+  await installLocal(project, extensions);
+  const profile = JSON.parse(await fs.readFile(profileFile, 'utf8'));
+  assert.deepEqual(profile[0], other);
+  const registration = profile.find(entry => entry.identifier.id === id);
+  assert.equal(registration.version, manifest.version);
+  assert.equal(registration.relativeLocation, id);
+  assert.equal(registration.location.scheme, 'file');
+  // URI paths use forward slashes and a leading slash before a Windows drive.
+  const uriPath = require('node:url').fileURLToPath(new URL(`file://${registration.location.path}`));
+  assert.equal(uriPath, target);
+  assert.deepEqual(JSON.parse(await fs.readFile(obsoleteFile, 'utf8')), {
+    [`${id}-0.1.0`]: true, 'other.extension-0.9.0': true,
+  });
+  await installLocal(project, extensions);
+  assert.equal(JSON.parse(await fs.readFile(profileFile, 'utf8')).filter(entry => entry.identifier.id === id).length, 1);
+});
+
+test('updates the registered version and keeps its UUID and metadata', async t => {
+  const { project, extensions, manifest } = await fixture(t);
+  await installLocal(project, extensions);
+  const profileFile = path.join(extensions, 'extensions.json');
+  const metadata = { installedTimestamp: 123, pinned: true, isMachineScoped: true };
+  await fs.writeFile(profileFile, JSON.stringify([{
+    identifier: { id: id.toUpperCase(), uuid: 'existing-uuid' }, version: manifest.version,
+    location: { $mid: 1, scheme: 'file', path: '/old/location' }, metadata,
+  }]));
+  manifest.version = '0.2.0';
+  await fs.writeFile(path.join(project, 'package.json'), JSON.stringify(manifest));
+  await installLocal(project, extensions);
+  const profile = JSON.parse(await fs.readFile(profileFile, 'utf8'));
+  assert.equal(profile.length, 1);
+  assert.equal(profile[0].version, '0.2.0');
+  assert.deepEqual(profile[0].identifier, { id, uuid: 'existing-uuid' });
+  assert.deepEqual(profile[0].metadata, metadata);
+});
+
+test('does not initialize an incomplete profile when other extension folders exist', async t => {
+  const { project, extensions } = await fixture(t);
+  const otherFolder = path.join(extensions, 'other.extension-1.0.0');
+  await fs.mkdir(otherFolder, { recursive: true });
+  const otherManifest = JSON.stringify({ publisher: 'other', name: 'extension', version: '1.0.0' });
+  await fs.writeFile(path.join(otherFolder, 'package.json'), otherManifest);
+  await installLocal(project, extensions);
+  await assert.rejects(fs.stat(path.join(extensions, 'extensions.json')), { code: 'ENOENT' });
+  assert.equal(await fs.readFile(path.join(otherFolder, 'package.json'), 'utf8'), otherManifest);
+});
+
+test('invalid registry data leaves the previous payload and metadata intact', async t => {
+  const { project, extensions, target } = await fixture(t);
+  await installLocal(project, extensions);
+  const previous = await fs.readFile(path.join(target, 'out', 'extension.js'), 'utf8');
+  await fs.writeFile(path.join(project, 'out', 'extension.js'), 'changed');
+  const profileFile = path.join(extensions, 'extensions.json');
+  for (const invalid of ['{', '{}', '[null]', '[{"identifier":{}}]']) {
+    await fs.writeFile(profileFile, invalid);
+    await assert.rejects(installLocal(project, extensions), /invalide/);
+    assert.equal(await fs.readFile(profileFile, 'utf8'), invalid);
+    assert.equal(await fs.readFile(path.join(target, 'out', 'extension.js'), 'utf8'), previous);
+  }
+});
+
+test('a failed metadata update restores the previous files, registry and removal markers', async t => {
+  const { project, extensions, target, manifest } = await fixture(t);
+  await installLocal(project, extensions);
+  const previous = await fs.readFile(path.join(target, 'out', 'extension.js'), 'utf8');
+  await fs.writeFile(path.join(project, 'out', 'extension.js'), 'changed');
+  const profileFile = path.join(extensions, 'extensions.json');
+  const obsoleteFile = path.join(extensions, '.obsolete');
+  const profile = '[ ]';
+  const obsolete = JSON.stringify({ [`${id}-${manifest.version}`]: true });
+  await fs.writeFile(profileFile, profile);
+  await fs.writeFile(obsoleteFile, obsolete);
+  const rename = fs.rename;
+  t.mock.method(fs, 'rename', async (from, to) => {
+    if (to === obsoleteFile) throw Object.assign(new Error('simulated write failure'), { code: 'EACCES' });
+    return rename(from, to);
+  });
+  await assert.rejects(installLocal(project, extensions), { code: 'EACCES' });
+  assert.equal(await fs.readFile(path.join(target, 'out', 'extension.js'), 'utf8'), previous);
+  assert.equal(await fs.readFile(profileFile, 'utf8'), profile);
+  assert.equal(await fs.readFile(obsoleteFile, 'utf8'), obsolete);
+  assert.deepEqual((await fs.readdir(extensions)).sort(), ['.obsolete', 'extensions.json', id]);
+});
+
 test('refuses to replace a folder belonging to another extension', async t => {
   const { project, extensions, target } = await fixture(t);
   await fs.mkdir(target, { recursive: true });

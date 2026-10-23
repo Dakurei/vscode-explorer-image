@@ -39,7 +39,7 @@ npm run install:local
 
 Remplacez `<URL_DU_DEPOT>` par l’URL copiée. Fermez toutes les fenêtres de VS Code avant l’installation, puis relancez-le. La section **Image** apparaît dans l’Explorateur.
 
-Le script compile l’extension et la copie dans le [dossier d’extensions de VS Code](https://code.visualstudio.com/api/working-with-extensions/publishing-extension#your-extension-folder), sous l’identifiant `local-tools.explorer-image`. Les commandes fonctionnent sous Linux, macOS et Windows (PowerShell compris). Conservez le clone pour les prochaines mises à jour.
+Le script compile l’extension et la copie dans le [dossier d’extensions de VS Code](https://code.visualstudio.com/api/working-with-extensions/publishing-extension#your-extension-folder), sous l’identifiant `local-tools.explorer-image`. Il met aussi à jour le registre du profil par défaut lorsqu’il existe et retire le marqueur de suppression de la version réinstallée. Les commandes fonctionnent sous Linux, macOS et Windows (PowerShell compris). Conservez le clone pour les prochaines mises à jour.
 
 ### VS Code Insiders
 
@@ -80,6 +80,8 @@ npm run update:local -- --extensions-dir "/chemin/vers/les/extensions"
 ```
 
 Les mises à jour sont manuelles. Si vous avez modifié les sources et que Git signale un conflit ou une divergence, résolvez-le avant de relancer la commande.
+
+Si l’extension a disparu de la liste après une ancienne installation depuis les sources, fermez toutes les fenêtres de VS Code et relancez `npm run install:local` avec la même option de destination (par exemple `-- --insiders`). Le script réenregistre la copie installée sans modifier vos réglages ni les autres extensions. Relancez ensuite VS Code et cherchez `@installed explorer-image` dans la vue Extensions.
 
 ## Configurer
 
