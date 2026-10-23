@@ -1,6 +1,36 @@
-# Image dans l’Explorateur
+<h1 align="center">Image dans l’Explorateur</h1>
 
-Extension TypeScript pour VS Code 1.96 ou plus récent. Elle ajoute une section **Image** dans l’Explorateur. L’image remplit toute la surface du panneau, sans marges, textes ni boutons superposés. Le rafraîchissement et les réglages sont accessibles dans la barre de titre.
+<p align="center">
+  Une image distante dans votre Explorateur VS Code, toujours à jour.
+</p>
+
+<p align="center">
+  <a href="https://github.com/Dakurei/vscode-explorer-image/actions/workflows/ci.yml">
+    <img src="https://github.com/Dakurei/vscode-explorer-image/actions/workflows/ci.yml/badge.svg?branch=master" alt="État des tests Linux, macOS et Windows">
+  </a>
+  <a href="https://code.visualstudio.com/">
+    <img src="https://img.shields.io/badge/VS_Code-1.96%2B-007ACC" alt="VS Code 1.96 ou plus récent">
+  </a>
+  <a href="https://nodejs.org/">
+    <img src="https://img.shields.io/badge/Node.js-22%2B-5FA04E" alt="Node.js 22 ou plus récent">
+  </a>
+  <a href="LICENSE">
+    <img src="https://img.shields.io/badge/Licence-MIT-64748B" alt="Licence MIT">
+  </a>
+</p>
+
+<p align="center">
+  <a href="#installation">Installation</a> ·
+  <a href="#configurer">Configuration</a> ·
+  <a href="#mise-à-jour">Mise à jour</a> ·
+  <a href="https://github.com/Dakurei/vscode-explorer-image/issues">Signaler un problème</a>
+</p>
+
+---
+
+Ajoutez une section **Image** à l’Explorateur de VS Code pour garder un visuel distant sous les yeux : webcam, graphique, état d’un service ou toute autre image accessible par URL. Le rafraîchissement est automatique et configurable.
+
+L’image remplit toute la surface du panneau, sans marges, textes ni boutons superposés. Le rafraîchissement manuel et les réglages sont accessibles dans la barre de titre.
 
 ## Installation
 
