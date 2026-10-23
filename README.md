@@ -20,7 +20,7 @@
 
 ---
 
-Ajoutez une section **Image** à l’Explorateur de VS Code pour garder un visuel distant sous les yeux : webcam, graphique, état d’un service ou toute autre image accessible par URL. Le rafraîchissement est automatique et configurable. Les flux MJPEG sont lus en continu.
+Ajoutez une section **VS Code Explorer Image** à l’Explorateur de VS Code pour garder un visuel distant sous les yeux : webcam, graphique, état d’un service ou toute autre image accessible par URL. Le rafraîchissement est automatique et configurable. Les flux MJPEG sont lus en continu.
 
 L’image remplit toute la surface du panneau, sans marges, textes ni boutons superposés. Le rafraîchissement manuel et les réglages sont accessibles dans la barre de titre.
 
@@ -37,7 +37,7 @@ npm ci
 npm run install:local
 ```
 
-Remplacez `<URL_DU_DEPOT>` par l’URL copiée. Fermez toutes les fenêtres de VS Code avant l’installation, puis relancez-le. La section **Image** apparaît dans l’Explorateur.
+Remplacez `<URL_DU_DEPOT>` par l’URL copiée. Fermez toutes les fenêtres de VS Code avant l’installation, puis relancez-le. La section **VS Code Explorer Image** apparaît dans l’Explorateur.
 
 Le script compile l’extension et la copie dans le [dossier d’extensions de VS Code](https://code.visualstudio.com/api/working-with-extensions/publishing-extension#your-extension-folder), sous l’identifiant `local-tools.explorer-image`. Il met aussi à jour le registre du profil par défaut lorsqu’il existe et retire le marqueur de suppression de la version réinstallée. Les commandes fonctionnent sous Linux, macOS et Windows (PowerShell compris). Conservez le clone pour les prochaines mises à jour.
 
@@ -85,7 +85,7 @@ Si l’extension a disparu de la liste après une ancienne installation depuis l
 
 ## Configurer
 
-Dans l’Explorateur, ouvrez la section **Image**, puis cliquez sur l’engrenage de son titre. Les réglages sont également accessibles en recherchant `explorerImage` dans les paramètres VS Code.
+Dans l’Explorateur, ouvrez la section **VS Code Explorer Image**, puis cliquez sur l’engrenage de son titre. Les réglages sont également accessibles en recherchant `explorerImage` dans les paramètres VS Code.
 
 Exemple dans les paramètres utilisateur JSON :
 
@@ -106,7 +106,7 @@ Exemple dans les paramètres utilisateur JSON :
 | `explorerImage.autoRefresh` | `true` | Case à cocher pour activer ou désactiver le rafraîchissement des images fixes et la reconnexion des flux interrompus, sans modifier le délai. |
 | `explorerImage.refreshInterval` | `60` | Délai en secondes après la fin du chargement ou avant une reconnexion, entre 0 et 86400. `0` désactive les tentatives automatiques. |
 
-Les modifications s’appliquent immédiatement. Décochez **Auto Refresh** dans les réglages pour désactiver le rafraîchissement automatique : l’image se charge toujours à l’ouverture du panneau, et le délai configuré reste conservé. L’icône **Rafraîchir** dans la barre de titre permet de recharger à tout moment. Vous pouvez redimensionner la section en déplaçant sa séparation dans l’Explorateur. Si elle est masquée, utilisez **Affichage → Ouvrir la vue… → Image**.
+Les modifications s’appliquent immédiatement. Décochez **Auto Refresh** dans les réglages pour désactiver le rafraîchissement automatique : l’image se charge toujours à l’ouverture du panneau, et le délai configuré reste conservé. L’icône **Rafraîchir** dans la barre de titre permet de recharger à tout moment. Vous pouvez redimensionner la section en déplaçant sa séparation dans l’Explorateur. Si elle est masquée, utilisez **Affichage → Ouvrir la vue… → VS Code Explorer Image**.
 
 ### Flux MJPEG (`.mjpg`, `.mjpeg`)
 
@@ -156,7 +156,7 @@ npm ci
 npm test
 ```
 
-Ouvrez **ce dossier** dans VS Code, puis appuyez sur `F5`. Une fenêtre **Extension Development Host** s’ouvre avec la section **Image** dans l’Explorateur.
+Ouvrez **ce dossier** dans VS Code, puis appuyez sur `F5`. Une fenêtre **Extension Development Host** s’ouvre avec la section **VS Code Explorer Image** dans l’Explorateur.
 
 Les tests utilisent des serveurs HTTP locaux pour vérifier les téléchargements, l’authentification, les redirections, les réponses invalides, les limites de taille, le délai et l’annulation. Ils couvrent aussi les flux MJPEG fragmentés, la lecture continue, les coupures et les reconnexions, ainsi que la gestion des images en attente dans la webview. L’installation locale est testée dans des dossiers temporaires, y compris les réinstallations, les conflits et la conservation de la version précédente en cas de préparation incomplète. `npm run watch` permet de recompiler pendant le développement.
 
