@@ -1,0 +1,128 @@
+{
+  "name": "explorer-image",
+  "displayName": "Image dans l’Explorateur",
+  "description": "Affiche une image distante dans l’Explorateur de VS Code, avec rafraîchissement automatique.",
+  "version": "0.1.1",
+  "publisher": "local-tools",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22.0.0",
+    "vscode": "^1.96.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "main": "./out/extension.js",
+  "activationEvents": [
+    "onView:explorerImage.view"
+  ],
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": false
+    }
+  },
+  "contributes": {
+    "views": {
+      "explorer": [
+        {
+          "type": "webview",
+          "id": "explorerImage.view",
+          "name": "Image",
+          "contextualTitle": "Image distante"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "explorerImage.refresh",
+        "title": "Image : Rafraîchir",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "explorerImage.openSettings",
+        "title": "Image : Ouvrir les réglages",
+        "icon": "$(gear)"
+      },
+      {
+        "command": "explorerImage.setPassword",
+        "title": "Image : Enregistrer le mot de passe HTTP Basic"
+      },
+      {
+        "command": "explorerImage.clearPassword",
+        "title": "Image : Supprimer le mot de passe HTTP Basic enregistré"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "explorerImage.refresh",
+          "when": "view == explorerImage.view",
+          "group": "navigation@1"
+        },
+        {
+          "command": "explorerImage.openSettings",
+          "when": "view == explorerImage.view",
+          "group": "navigation@2"
+        },
+        {
+          "command": "explorerImage.setPassword",
+          "when": "view == explorerImage.view",
+          "group": "configuration@1"
+        },
+        {
+          "command": "explorerImage.clearPassword",
+          "when": "view == explorerImage.view",
+          "group": "configuration@2"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Image dans l’Explorateur",
+      "properties": {
+        "explorerImage.url": {
+          "type": "string",
+          "default": "",
+          "order": 1,
+          "description": "URL HTTP ou HTTPS de l’image. Une URL vide désactive le chargement."
+        },
+        "explorerImage.username": {
+          "type": "string",
+          "default": "",
+          "order": 2,
+          "description": "Identifiant HTTP Basic (facultatif, sans deux-points)."
+        },
+        "explorerImage.password": {
+          "type": "string",
+          "default": "",
+          "order": 3,
+          "scope": "machine",
+          "ignoreSync": true,
+          "markdownDescription": "Mot de passe HTTP Basic facultatif, stocké **en clair** dans les réglages utilisateur. Préférez la commande **Image : Enregistrer le mot de passe HTTP Basic** pour utiliser le coffre sécurisé. Le mot de passe du coffre est prioritaire."
+        },
+        "explorerImage.refreshInterval": {
+          "type": "integer",
+          "default": 60,
+          "minimum": 0,
+          "maximum": 86400,
+          "order": 4,
+          "description": "Secondes entre deux chargements (60 par défaut). 0 désactive le rafraîchissement automatique."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p .",
+    "watch": "tsc -watch -p .",
+    "test": "npm run compile && node --test",
+    "install:local": "npm run compile && node scripts/install-local.cjs",
+    "update:local": "git pull --ff-only && npm ci && npm run install:local --",
+    "vscode:prepublish": "npm run compile",
+    "package": "vsce package --no-dependencies --allow-missing-repository"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/vscode": "~1.96.0",
+    "@vscode/vsce": "^3.0.0",
+    "typescript": "^5.7.0"
+  }
+}

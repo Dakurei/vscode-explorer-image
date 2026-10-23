@@ -1,0 +1,40 @@
+html,
+body,
+#frame {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+body {
+  color: var(--vscode-foreground);
+  font-family: var(--vscode-font-family);
+  font-size: var(--vscode-font-size);
+  background: var(--vscode-editor-background);
+}
+
+[hidden] { display: none !important; }
+
+#frame { position: relative; }
+
+#image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+#placeholder {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  margin: 0;
+  padding: 12px;
+  text-align: center;
+  overflow-wrap: anywhere;
+  color: var(--vscode-descriptionForeground);
+}
