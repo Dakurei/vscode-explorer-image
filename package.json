@@ -1,6 +1,6 @@
 {
   "name": "explorer-image",
-  "displayName": "Image dans l’Explorateur",
+  "displayName": "VS Code Explorer Image",
   "description": "Affiche une image distante dans l’Explorateur de VS Code, avec rafraîchissement automatique.",
   "version": "0.1.1",
   "publisher": "local-tools",
@@ -77,7 +77,7 @@
       ]
     },
     "configuration": {
-      "title": "Image dans l’Explorateur",
+      "title": "VS Code Explorer Image",
       "properties": {
         "explorerImage.url": {
           "type": "string",

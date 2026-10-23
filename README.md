@@ -1,22 +1,14 @@
-<h1 align="center">Image dans l’Explorateur</h1>
+<h1 align="center">VS Code Explorer Image</h1>
 
 <p align="center">
   Une image distante dans votre Explorateur VS Code, toujours à jour.
 </p>
 
 <p align="center">
-  <a href="https://github.com/Dakurei/vscode-explorer-image/actions/workflows/ci.yml">
-    <img src="https://github.com/Dakurei/vscode-explorer-image/actions/workflows/ci.yml/badge.svg?branch=master" alt="État des tests Linux, macOS et Windows">
-  </a>
-  <a href="https://code.visualstudio.com/">
-    <img src="https://img.shields.io/badge/VS_Code-1.96%2B-007ACC" alt="VS Code 1.96 ou plus récent">
-  </a>
-  <a href="https://nodejs.org/">
-    <img src="https://img.shields.io/badge/Node.js-22%2B-5FA04E" alt="Node.js 22 ou plus récent">
-  </a>
-  <a href="LICENSE">
-    <img src="https://img.shields.io/badge/Licence-MIT-64748B" alt="Licence MIT">
-  </a>
+  <a href="https://github.com/Dakurei/vscode-explorer-image/actions/workflows/ci.yml"><img src="https://github.com/Dakurei/vscode-explorer-image/actions/workflows/ci.yml/badge.svg?branch=master" alt="État des tests Linux, macOS et Windows"></a>
+  <a href="https://code.visualstudio.com/"><img src="https://img.shields.io/badge/VS_Code-1.96%2B-007ACC" alt="VS Code 1.96 ou plus récent"></a>
+  <a href="https://nodejs.org/"><img src="https://img.shields.io/badge/Node.js-22%2B-5FA04E" alt="Node.js 22 ou plus récent"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/Licence-MIT-64748B" alt="Licence MIT"></a>
 </p>
 
 <p align="center">
